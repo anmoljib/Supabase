@@ -1,120 +1,130 @@
-<script>
-  // 🔑 Koble nettsiden til ditt Supabase-prosjekt
-  const SUPABASE_URL = "https://wsuxsbjsqcfrhiyeaslm.supabase.co";
-  const SUPABASE_ANON_KEY =
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndzdXhzYmpzcWNmcmhpeWVhc2xtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM1OTUyNjksImV4cCI6MjA3OTE3MTI2OX0.oQunt-xNcNH0YAEsrBcPnJHrLGAyRhrso4YU5eW_NLQ";
-  const supabase = window.supabase.createClient(
-    SUPABASE_URL,
-    SUPABASE_ANON_KEY
-  );
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <script>
+      // 🔑 Koble nettsiden til ditt Supabase-prosjekt
+      const SUPABASE_URL = "https://wsuxsbjsqcfrhiyeaslm.supabase.co";
+      const SUPABASE_ANON_KEY =
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndzdXhzYmpzcWNmcmhpeWVhc2xtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM1OTUyNjksImV4cCI6MjA3OTE3MTI2OX0.oQunt-xNcNH0YAEsrBcPnJHrLGAyRhrso4YU5eW_NLQ";
+      const supabase = window.supabase.createClient(
+        SUPABASE_URL,
+        SUPABASE_ANON_KEY
+      );
 
-  // Henter elementene fra skjemaet og siden
-  const form = document.getElementById("form");
-  const nameInput = document.getElementById("name");
-  const contentInput = document.getElementById("content");
-  const msgsEl = document.getElementById("msgs");
-  const statusEl = document.getElementById("status");
-  const countEl = document.getElementById("count");
+      // Henter elementene fra skjemaet og siden
+      const form = document.getElementById("form");
+      const nameInput = document.getElementById("name");
+      const contentInput = document.getElementById("content");
+      const msgsEl = document.getElementById("msgs");
+      const statusEl = document.getElementById("status");
+      const countEl = document.getElementById("count");
 
-  // Gjør tekst trygg for visning (hindrer HTML-injeksjon)
-  function esc(s) {
-    return (s || "").replace(
-      /[<>&"']/g,
-      (c) =>
-        ({
-          "<": "&lt;",
-          ">": "&gt;",
-          "&": "&amp;",
-          '"': "&quot;",
-          "'": "&#39;",
-        }[c])
-    );
-  }
+      // Gjør tekst trygg for visning (hindrer HTML-injeksjon)
+      function esc(s) {
+        return (s || "").replace(
+          /[<>&"']/g,
+          (c) =>
+            ({
+              "<": "&lt;",
+              ">": "&gt;",
+              "&": "&amp;",
+              '"': "&quot;",
+              "'": "&#39;",
+            }[c])
+        );
+      }
 
-  // Deler opp meldingen i navn og tekst
-  function parseRow(r) {
-    const raw = r.content || "";
-    const i = raw.indexOf("::");
-    return i === -1
-      ? { name: "Anonym", message: raw, created_at: r.created_at }
-      : {
-          name: raw.slice(0, i),
-          message: raw.slice(i + 2),
-          created_at: r.created_at,
-        };
-  }
+      // Deler opp meldingen i navn og tekst
+      function parseRow(r) {
+        const raw = r.content || "";
+        const i = raw.indexOf("::");
+        return i === -1
+          ? { name: "Anonym", message: raw, created_at: r.created_at }
+          : {
+              name: raw.slice(0, i),
+              message: raw.slice(i + 2),
+              created_at: r.created_at,
+            };
+      }
 
-  // Leser meldinger fra databasen og viser dem
-  async function loadMessages() {
-    statusEl.textContent = "Laster...";
+      // Leser meldinger fra databasen og viser dem
+      async function loadMessages() {
+        statusEl.textContent = "Laster...";
 
-    const { data, error } = await supabase
-      .from("messages")
-      .select("*")
-      .order("created_at", { ascending: false })
-      .limit(100);
+        const { data, error } = await supabase
+          .from("messages")
+          .select("*")
+          .order("created_at", { ascending: false })
+          .limit(100);
 
-    if (error) {
-      statusEl.textContent = "Feil: " + error.message;
-      return;
-    }
+        if (error) {
+          statusEl.textContent = "Feil: " + error.message;
+          return;
+        }
 
-    countEl.textContent = (data || []).length;
+        countEl.textContent = (data || []).length;
 
-    msgsEl.innerHTML = (data || [])
-      .map((r) => {
-        const it = parseRow(r);
-        const when = new Date(it.created_at).toLocaleString();
+        msgsEl.innerHTML = (data || [])
+          .map((r) => {
+            const it = parseRow(r);
+            const when = new Date(it.created_at).toLocaleString();
 
-        return `
+            return `
 <div class="border rounded p-2">
 <div class="fw-semibold">${esc(it.name)}</div>
 <div>${esc(it.message)}</div>
 <div class="small text-muted">${when}</div>
 </div>
 `;
-      })
-      .join("");
+          })
+          .join("");
 
-    statusEl.textContent = "Klar";
-  }
+        statusEl.textContent = "Klar";
+      }
 
-  // Sender inn ny melding når eleven trykker "Lagre"
-  form.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    form.classList.add("was-validated");
-    if (!form.checkValidity()) return;
+      // Sender inn ny melding når eleven trykker "Lagre"
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        form.classList.add("was-validated");
+        if (!form.checkValidity()) return;
 
-    const name = nameInput.value.trim();
-    const msg = contentInput.value.trim();
-    if (!name || !msg) return;
+        const name = nameInput.value.trim();
+        const msg = contentInput.value.trim();
+        if (!name || !msg) return;
 
-    const submitBtn = form.querySelector('button[type="submit"]');
-    submitBtn.disabled = true;
-    statusEl.textContent = "Lagrer...";
+        const submitBtn = form.querySelector('button[type="submit"]');
+        submitBtn.disabled = true;
+        statusEl.textContent = "Lagrer...";
 
-    // Sender data til Supabase-tabellen "messages"
-    const { error } = await supabase
-      .from("messages")
-      .insert({ content: name + "::" + msg });
+        // Sender data til Supabase-tabellen "messages"
+        const { error } = await supabase
+          .from("messages")
+          .insert({ content: name + "::" + msg });
 
-    submitBtn.disabled = false;
+        submitBtn.disabled = false;
 
-    if (error) {
-      statusEl.textContent = "Feil ved lagring: " + error.message;
-      return;
-    }
+        if (error) {
+          statusEl.textContent = "Feil ved lagring: " + error.message;
+          return;
+        }
 
-    // Nullstiller skjema og fjerner valideringsklassen
-    form.reset();
-    form.classList.remove("was-validated");
-    statusEl.textContent = "Lagret!";
-    nameInput.focus();
+        // Nullstiller skjema og fjerner valideringsklassen
+        form.reset();
+        form.classList.remove("was-validated");
+        statusEl.textContent = "Lagret!";
+        nameInput.focus();
 
-    // Oppdaterer visningen
-    await loadMessages();
-  });
+        // Oppdaterer visningen
+        await loadMessages();
+      });
 
-  // Kjører første opplasting av meldinger når siden lastes
-  loadMessages();
-</script>
+      // Kjører første opplasting av meldinger når siden lastes
+      loadMessages();
+    </script>
+  </body>
+</html>
