@@ -1,11 +1,109 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="no">
   <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Document</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Supabase demo — Meldinger</title>
+
+    <!-- Laster Bootstrap for enkel styling -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+
+    <style>
+      body {
+        background: #f8fafc;
+      }
+      .card-elev {
+        border: 1px solid #e9ecef;
+        border-radius: 1rem;
+      }
+      .muted {
+        color: #6c757d;
+      }
+    </style>
   </head>
   <body>
+    <!-- Toppfelt med tittel -->
+    <nav class="navbar navbar-expand-md bg-white border-bottom">
+      <div class="container">
+        <a class="navbar-brand fw-semibold" href="#">Supabase demo</a>
+      </div>
+    </nav>
+
+    <main class="container my-4">
+      <header class="text-center mb-4">
+        <h1 class="h4 fw-bold">Navn + kort melding</h1>
+        <p class="text-muted mb-0">Skriver til databasen og viser under.</p>
+      </header>
+
+      <!-- Skjema for innsending av navn og melding -->
+      <section class="row g-4">
+        <div class="col-12 col-lg-5">
+          <div class="card card-elev shadow-sm">
+            <div class="card-body">
+              <h2 class="h6 mb-3">Send inn</h2>
+              <form id="form" class="needs-validation" novalidate>
+                <div class="mb-3">
+                  <label class="form-label" for="name">Navn</label>
+                  <input
+                    id="name"
+                    class="form-control"
+                    minlength="2"
+                    maxlength="30"
+                    required
+                    placeholder="F.eks. Sara"
+                  />
+                  <div class="invalid-feedback">
+                    Skriv inn navnet ditt (2–30 tegn).
+                  </div>
+                </div>
+                <div class="mb-3">
+                  <label class="form-label" for="content">Kort melding</label>
+                  <input
+                    id="content"
+                    class="form-control"
+                    maxlength="140"
+                    required
+                    placeholder="Hei verden! (maks 140 tegn)"
+                  />
+                  <div class="invalid-feedback">
+                    Skriv en kort melding (maks 140 tegn).
+                  </div>
+                </div>
+                <button class="btn btn-primary w-100" type="submit">
+                  Lagre
+                </button>
+                <div id="status" class="form-text mt-2 muted">Klar</div>
+              </form>
+            </div>
+          </div>
+        </div>
+
+        <!-- Område for å vise alle meldinger -->
+        <div class="col-12 col-lg-7">
+          <div class="card card-elev shadow-sm">
+            <div class="card-body">
+              <div
+                class="d-flex align-items-center justify-content-between mb-2"
+              >
+                <h2 class="h6 mb-0">Meldinger</h2>
+                <span class="badge text-bg-light"
+                  ><span id="count">0</span> stk</span
+                >
+              </div>
+              <div id="msgs" class="d-grid gap-2"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Laster Supabase-biblioteket som gjør det mulig å kommunisere med databasen -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <!-- Her starter vårt eget JavaScript -->
     <script>
       // 🔑 Koble nettsiden til ditt Supabase-prosjekt
       const SUPABASE_URL = "https://wsuxsbjsqcfrhiyeaslm.supabase.co";
